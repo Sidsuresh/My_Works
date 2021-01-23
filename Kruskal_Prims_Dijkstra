@@ -1,0 +1,233 @@
+#include <iostream>
+#include <stdio.h>
+#include <string.h>
+using namespace std;
+
+void addedge(int graph[20][20], int v, int flag)
+{
+    int s, d, w;
+    cout << "\nEnter the source: ";
+    cin >> s;
+    cout << "\nEnter the destination: ";
+    cin >> d;
+    cout << "\nEnter the weight: ";
+    cin >> w;
+    graph[s][d] = w;
+    if (flag == 1)
+        graph[d][s] = w;
+}
+
+int findP(int* P, int i)
+{
+    if (P[i] == i)
+        return(i);
+    return(P, P[i]);
+}
+
+void Print(int graph[20][20], int i, int j, int flag)
+{
+    if (flag == 1)
+    {
+        if (i < j)
+            cout << "\n(" << i << "; " << j << "; " << graph[i][j] << ")";
+        else
+            cout << "\n(" << j << "; " << i << "; " << graph[i][j] << ")";
+    }
+    else
+    {
+        cout << "\n(" << i << "; " << j << "; " << graph[i][j] << ")";
+    }
+}
+
+void Srch(int* P, int a, int v, int b)
+{
+    for (int i = 0; i < v; ++i)
+    {
+        if (i == a)
+            continue;
+        if (P[i] == P[a])
+            P[i] = P[b];
+    }
+}
+
+void Kruskals(int graph[20][20], int v, int e, int flag)
+{
+    int* P = new int[v];
+    for (int i = 0; i < v; ++i)
+    {
+        P[i] = i;
+    }
+    int cnt = 0;
+    while (cnt < v - 1)
+    {
+        int min = INT_MAX, a = -1, b = -1;
+        for (int i = 0; i < v; ++i)
+        {
+            int spar = findP(P, i);
+            for (int j = 0; j < v; ++j)
+            {
+                if (graph[i][j] == 0)
+                    continue;
+                int dpar = findP(P,j);
+                if ((spar != dpar) && (min > graph[i][j]))
+                {
+                    min = graph[i][j];
+                    a = i;
+                    b = j;
+                }
+            }
+        }
+        Srch(P, a, v, b);
+        P[a] = P[b];
+        Print(graph, a, b, flag);
+        cnt++;
+    }
+}
+
+int chk(int* V, int c, int v)
+{
+    int flag = 0;
+    for (int i = 0; i < v; ++i)
+    {
+        if (V[i] == c)
+        {
+            flag = 1;
+            break;
+        }
+    }
+    return(flag);
+}
+
+void Prims(int graph[20][20], int v, int e, int flag)
+{
+    int node;
+    int* V = new int[v];
+    int* P = new int[v];
+    for (int i = 0; i < v; ++i)
+    {
+        P[i] = i;
+    }
+    cout << "\nEnter starting node: ";
+    cin >> node;
+    V[0] = node;
+    int cnt = 0, vercnt = 1;
+    while (cnt < v - 1)
+    {
+        int min = INT_MAX, a = -1, b = -1;
+        for (int i = 0; i < v; ++i)
+        {
+            int check = chk(V, i, v);
+            if (check == 0)
+                continue;
+            int spar = findP(P, i);
+            for (int j = 0; j < v; ++j)
+            {
+                if (graph[i][j] == 0)
+                    continue;
+                int dpar = findP(P, j);
+                if ((spar != dpar) && (min > graph[i][j]))
+                {
+                    min = graph[i][j];
+                    a = i;
+                    b = j;
+                }
+            }
+        }
+        V[vercnt] = b;
+        vercnt++;
+        Srch(P, a, v, b);
+        P[a] = P[b];
+        Print(graph, a, b, flag);
+        cnt++;
+    }
+}
+
+int MinDist(int dist[], int chk[], int src)
+{
+    int min = INT_MAX;
+    int ind = src;
+
+    for (int i = 0; i < 6; i++)
+    {
+        if (chk[i] == 0 && dist[i] <= min)
+        {
+            min = dist[i];
+            ind = i;
+        }
+    }
+    return ind;
+}
+
+void Dijkstra(int graph[20][20], int v, int e, int flag)
+{
+    int src;
+    cout << "\nEnter the source vertex: ";
+    cin >> src;
+    int* dist = new int[v];
+    int* chk = new int[v];
+    for (int i = 0; i < v; ++i)
+    {
+        dist[i] = INT_MAX;
+        chk[i] = 0;
+    }
+    dist[src] = 0;
+    for (int i = 0; i < v; i++)
+    {
+        int m = MinDist(dist, chk, src); 
+        chk[m] = 1;
+        for (int i = 0; i < v; i++)
+        {
+            if (chk[i] == 0 && graph[m][i] && dist[m] != INT_MAX && dist[m] + graph[m][i] < dist[i])
+                dist[i] = dist[m] + graph[m][i];
+        }
+    }
+    cout << "\n Shortest Distance from Source vertex: ";
+    for (int i = 0; i < v; ++i)
+    {
+        cout << "\n Vertex: " << i << " Minimum Distance: " << dist[i];
+    }
+}
+
+void show(int graph[20][20], int v)
+{
+    cout << "\nThe graph: \n";
+    for (int i = 0; i < v; ++i)
+    {
+        for (int j = 0; j < v; ++j)
+            cout << graph[i][j] << " ";
+        cout << endl;
+    }
+}
+
+int main()
+{
+    int graph[20][20];
+    int v, e, flag;
+    cout << "\nEnter the number of vertices(max 20): ";
+    cin >> v; 
+    cout << "\nEnter the number of edges: ";
+    cin >> e;
+    cout << "\nEnter 1 for undirected graph\nEnter 2 for directed graph";
+    cout << "\nEnter the option: ";
+    cin >> flag;
+    for (int i = 0; i < v; ++i)
+    {
+        for (int j = 0; j < v; ++j)
+            graph[i][j] = 0;
+    }
+    cout << "\nEnter the edges:";
+    for (int i = 0; i < e; ++i)
+    {
+        cout << "\nEdge " << i + 1 << ": ";
+        addedge(graph, v, flag);
+    }
+    cout << "\nThe graph: ";
+    show(graph, v);
+    cout << "\nKruskal's Algorithm: ";
+    Kruskals(graph, v, e, flag);
+    cout << "\nPrim's Algorithm: ";
+    Prims(graph, v, e, flag);
+    cout << "\nDijkstra Algorithm: ";
+    Dijkstra(graph, v, e, flag);
+    return(0);
+}
