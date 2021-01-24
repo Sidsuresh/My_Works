@@ -1,0 +1,106 @@
+#include <stdio.h>
+#include <sys/types.h>
+#include <semaphore.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <stdlib.h>
+sem_t match, paper, tobacco, Agent;	
+void *agent(void *arg)
+{
+        while(1)
+        {
+                sleep(1);                                                                                                                                        
+                int r = rand()%3;                                                                                                                                
+                switch(r)                                                                                                                                        
+                {
+                        case 0: { 
+                                      sem_post(&tobacco);                                                                                                                              
+                                      sem_post(&paper);
+                                      printf("\nAgent has produced Tobacco and Paper");
+                                }
+                                break;
+                        case 1: {
+                                      sem_post(&tobacco);  
+                                      sem_post(&match);
+                                      printf("\nAgent has produced Tobacco and Match");                                                                                        
+                                }    
+                                break;                                                                                                                                   
+                        case 2: {
+                                      sem_post(&match);                                                                                                                                                                                                                                                              
+                                      sem_post(&paper);
+                                      printf("\nAgent has produced Match and Paper");
+                                }                                                                                                                                                
+                                break;
+               }
+                sem_wait(&Agent);
+        }
+}
+
+void *smokeri(void *arg)
+{
+        int i = *(int*) arg;
+        while(1)
+        {
+                sleep(1);
+                switch(i)
+                {
+                        case 1:{
+                                      sem_wait(&tobacco);
+                                      if(sem_trywait(&paper) == 0)
+                                      {
+                                             printf("\nSmoker1 is now smoking");
+                                             sem_post(&Agent);
+                                      }
+                                      else
+                                             sem_post(&tobacco);
+                               }
+                               break;
+                        case 2:{
+                                      sem_wait(&tobacco);
+                                      if(sem_trywait(&match) == 0)
+                                      {
+                                             printf("\nSmoker2 is now smoking");
+                                             sem_post(&Agent);
+                                      }
+                                      else
+                                        		 sem_post(&tobacco);
+                                }
+                                break;
+                        case 3: {
+                                      sem_wait(&match);
+                                      if(sem_trywait(&paper) == 0)
+                                      {
+                                              printf("\nSmoker3 is now smoking");
+                                              sem_post(&Agent);
+                                      }
+                                      else
+                                              sem_post(&match);
+                                }
+                                break;
+                }
+        }
+}
+
+int main()
+{
+        		pthread_t smkr[3], agnt;
+        		sem_init(&tobacco,0,0);
+        		sem_init(&match,0,0);
+        		sem_init(&paper,0,0);
+        		sem_init(&Agent,0,1);
+        		printf("\nSmoker 1 has Match");
+        		printf("\nSmoker 2 has Paper");
+        		printf("\nSmoker 3 has Tobacco");
+        		pthread_create(&agnt,NULL,agent,NULL);
+        		for(int i = 0; i < 3; ++i)
+                		pthread_create(&smkr[i],NULL,smokeri,&i);
+        		pthread_join(agnt,NULL);
+        		for(int i = 0; i < 3; ++i)
+                		pthread_join(smkr[i],NULL);
+        		while(1);
+        		sem_close(&tobacco);
+        		sem_close(&match);
+        		sem_close(&paper);
+        		sem_close(&Agent);
+        		return(0);
+}
