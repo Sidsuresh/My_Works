@@ -1,0 +1,504 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
+
+struct Process
+{
+        char pname[10];
+        int AT, BT, CT, TAT, WT, BTR, PRI;
+}P[30];
+
+struct Node
+{
+        int ind;
+        struct Node* link;
+};
+
+struct Node* front = NULL;
+struct Node* rear = NULL;
+void enqueue(int d)
+{
+        struct Node* temp1 = (struct Node*) malloc (sizeof(struct Node));
+        temp1->ind = d;
+        temp1->link = NULL;
+        if((front == NULL) && (rear == NULL))
+        {
+                front = temp1;
+                rear = temp1;
+        }   
+        else
+         {
+                rear->link = temp1;      
+                rear = temp1;
+        }
+}
+
+int dequeue()
+{
+        struct Node* temp;
+        if(front == NULL)
+                return(data);
+        else
+        {
+                temp = front;
+                data = temp->ind;
+                if(front == rear)
+                        front = rear = NULL;
+                else
+                {
+                        front = front->link;
+                        free(temp);
+                }
+        }
+        return(data);
+}
+
+int traverse(int num)
+{
+        struct Node* temp;
+        temp = front;
+        int check = 1;
+        while(temp != NULL)
+        {
+                if(temp->ind == num)
+                {
+                        check = 0;
+                        break;
+                }
+                temp = temp->link;
+        }
+        if(check == 0)
+                return(0);
+        else
+                return(1);
+}
+
+void input(int num)
+{
+        for(int i = 0; i < num; ++i)
+        {
+                printf("\nProcess %d", i+1);
+                printf("\nProcess Name: ");
+                scanf("%s", P[i].pname);
+                printf("\nArrival Time: ");
+                scanf("%d", &P[i].AT);
+                printf("\nBurst Time: ");
+                scanf("%d", &P[i].BT);
+        }
+}
+
+void disp(int num)
+{
+        int t_tat = 0, t_wt = 0;
+        float avg_tat, avg_wt;
+        for(int i = 0; i < num; ++i)
+        {
+                t_tat += P[i].TAT;
+                t_wt += P[i].WT;
+        }
+        avg_tat = (float)t_tat / num;
+        avg_wt = (float)t_wt / num;
+        printf("\nOrdered");
+        printf("\nPROCESS \tAT \tBT \tCT \tTAT \tWT");
+        for(int i = 0; i < num; ++i)
+        {
+                printf("\n%s \t \t %d \t %d \t %d \t %d \t %d",P[i].pname, P[i].AT, P[i].BT, P[i].CT, P[i].TAT, P[i].WT);
+        }
+        printf("\nTotal TAT: %d \t Average TAT: %.2f", t_tat, avg_tat);
+        printf("\nTotal WT: %d \t Average WT: %.2f", t_wt, avg_wt);
+}
+
+void fcfs(int num)
+{
+        struct Process temp;
+        for(int i = 0; i < num; ++i)
+        {
+                for(int j = i+1; j < num; ++j)
+                {
+                        if(P[i].AT > P[j].AT)
+                        {
+                                temp = P[i];
+                                P[i] = P[j];
+                                P[j] = temp;
+                        }
+                }
+        }
+}
+
+void sjf(int num)
+{
+        struct Process temp;
+        fcfs(num);
+        for(int i = 0; i < (num-1); ++i)
+        {
+                if(P[i].AT == P[i+1].BT)
+                {
+                        if(P[i].BT > P[i+1].BT)
+                        {
+                                temp = P[i];
+                                P[i] = P[i+1];
+                                P[i+1] = temp;
+                        }                                                              }
+        }
+        int etime = P[0].AT, min;
+        for(int i = 0; i < num; ++i)
+        {
+                for(int k = 0; k < num; ++k)
+                {
+                        etime+=P[k].BT;
+                        min = P[k+1].BT;
+                        for(int j = k+2; j < num; ++j)
+                        {
+                                if(etime >= P[j].AT && P[j].BT < min)
+                                {
+                                        temp = P[j-1];
+                                        P[j-1] = P[j];
+                                        P[j] = temp;
+                                }
+                        }
+
+                }
+        }
+}
+
+void pri(int num)
+{
+        for(int i = 0; i < num; ++i)
+        {
+                printf("\nPriority for Process%d: ", i+1);
+                scanf("%d", &P[i].PRI);
+        }
+        struct Process temp;
+        fcfs(num);
+        for(int i = 0; i < (num-1); ++i)
+        {
+                if(P[i].AT == P[i+1].AT)
+                {
+                        if(P[i].PRI > P[i+1].PRI)
+                        {
+                                temp = P[i];
+                                P[i] = P[i+1];
+                                P[i+1] = temp;
+                        }
+                }
+        }
+        int etime = P[0].AT, min;
+        for(int i = 0; i < num; ++i)
+        {
+                for(int k = 0; k < num; ++k)
+                {
+                        etime+=P[k].BT;
+                        min = P[k+1].PRI;
+                        for(int j = k+2; j < num; ++j)
+                        {
+                                if(etime >= P[j].AT && P[j].PRI < min)
+                                {
+                                        temp = P[j-1];
+                                        P[j-1] = P[j];
+                                        P[j] = temp;
+                                }
+                        }
+                }
+        }
+}
+
+void np(int num)
+{
+        P[0].CT = P[0].AT;
+        for(int i = 0; i < num; ++i)
+        {
+                if(i != 0)
+                {
+                        if(P[i].AT > P[i-1].CT)
+                                P[i].CT = P[i].AT;
+                        else
+                                P[i].CT = P[i-1].CT;
+                }
+                P[i].CT+=P[i].BT;
+        }
+        for(int j = 0; j < num; ++j)
+        {
+                P[j].TAT = P[j].CT - P[j].AT;
+                P[j].WT = P[j].TAT - P[j].BT;
+        }
+}
+
+void srtf(int num)
+{
+        printf("\nIn function");
+        struct Process temp;
+        fcfs(num);
+        for(int a = 0; a < num; ++a)
+                P[a].BTR = P[a].BT;
+        int j, time = 0, complete = 0;
+        if(time < P[0].AT)
+                time = P[0].AT;
+        while(complete < num)
+        {
+                for(j = 0; j < num; ++j)
+                {
+                        if(P[j].AT > time)
+                                break;
+                }
+                for(int k = 0; k < j; ++k)
+                {
+                        for(int m = 0; m < j; ++m)
+                        {
+                                if(P[k].BTR < P[m].BTR)
+                                {
+                                        temp = P[m];
+                                        P[m] = P[k];
+                                        P[k] = temp;
+                                }
+                        }
+                }
+                for(j = 0; j < num; ++j)
+                {
+                        if(P[j].BTR != 0)
+                                break;
+                }
+                if(P[j].AT > time)
+                        time = P[j].AT;
+                P[j].CT = time+1;
+	              P[j].BTR--;
+                time++;
+                complete = 0;
+                for(j = 0; j < num; j++)
+                {
+                        if(P[j].BTR == 0)
+                                complete++;
+                }
+        }
+        for(int k = 0; k < num; ++k)
+        {
+                P[k].TAT = P[k].CT - P[k].AT;
+                P[k].WT = P[k].TAT - P[k].BT;
+        }
+        for(int a = 0; a < num; ++a)
+        {
+                for(int b = 0; b < num; ++b)
+                {
+                        if(P[a].CT < P[b].CT)
+                        {
+                                temp = P[a];
+                                P[a] = P[b];
+                                P[b] = temp;
+                        }
+                }
+        }
+ }
+
+void pripe(int num)
+{
+        for(int i = 0; i < num; ++i)
+        {
+                printf("\nPriority for Process%d: ", i+1);
+                scanf("%d", &P[i].PRI);
+        }
+        struct Process temp;
+        fcfs(num);
+        for(int a = 0; a < num; ++a)
+                P[a].BTR = P[a].BT;
+        int j, time = 0, complete = 0;
+        if(time < P[0].AT)
+                time = P[0].AT;
+        while(complete < num)
+        {
+                for(j = 0; j < num; ++j)
+                {
+                        if(P[j].AT > time)
+                                break;
+                }
+                for(int k = 0; k < j; ++k)
+                {
+                        for(int m = 0; m < j; ++m)
+                        {
+                                if(P[k].PRI < P[m].PRI)
+                                {
+                                        temp = P[m];
+                                        P[m] = P[k];
+                                        P[k] = temp;
+                                }
+                         }
+                }
+                for(j = 0; j < num; ++j)
+                {
+                        if(P[j].BTR != 0)
+                                break;
+                }
+                if(P[j].AT > time)
+                        time = P[j].AT;
+                P[j].CT = time + 1;
+                P[j].BTR--;
+                time++;
+                complete = 0;
+                for(j = 0; j < num; ++j)
+                {
+                        if(P[j].BTR == 0)
+                                complete++;
+                }
+        }
+        for(int k = 0; k < num; ++k)
+        {
+                P[k].TAT = P[k].CT - P[k].AT;
+                P[k].WT = P[k].TAT - P[k].BT;
+        }
+        for(int a = 0; a < num; ++a)
+        {
+                for(int b = 0; b < num; ++b)
+                {
+                        if(P[a].CT < P[b].CT)
+                        {
+                                temp = P[a];
+                                P[a] = P[b];
+                                P[b] = temp;
+                        }
+                }
+       }
+ }
+
+void RR(int num)
+{
+        struct Process temp;
+        int chk, tq;
+        printf("\nEnter the time quantum: ");
+        scanf("%d", &tq);
+        fcfs(num);
+        for(int a = 0; a < num; ++a)
+                P[a].BTR = P[a].BT;
+        int time = 0, complete = 0;
+        if(time < P[0].AT)
+                time = P[0].AT;
+        enqueue(0);
+        while(complete < num)
+        {
+                int data = dequeue();
+                if(P[data].BTR == 0)
+                        continue;
+                else
+                {
+                        if(P[data].BTR < tq)
+                                chk = P[data].BTR;
+                        else
+                                chk = tq;
+                        P[data].CT = time+chk;
+                        P[data].BTR = P[data].BTR - chk;
+                        time += chk;
+                        for(int l = 0; l < num; ++l)
+                        {
+                                if(l == data)
+                                        continue;
+                                if(time >= P[l].AT)
+                                {
+                                        if(traverse(l) == 1)
+                                                enqueue(l);
+                                        else
+                                                continue;
+		  }
+                        }
+                        if(P[data].BTR > 0)
+                                enqueue(data);
+                        complete = 0;
+                        for(int b = 0; b < num; ++b)
+                        {
+                                if(P[b].BTR == 0)
+                                        complete++;
+                        }
+                }
+        }
+        for(int k = 0; k < num; ++k)
+        {
+                P[k].TAT = P[k].CT - P[k].AT;
+                P[k].WT = P[k].TAT - P[k].BT;
+        }
+        for(int a = 0; a < num; ++a)
+        {
+                for(int b = 0; b < num; ++b)
+                {
+                        if(P[a].CT < P[b].CT)
+                        {
+                                temp = P[a];
+                                P[a] = P[b];
+                                P[b] = temp;
+                        }
+                }
+        }
+}
+void main()
+{
+        int n,opt;
+        printf("\nEnter the number of processes(less than 30): ");
+        scanf("%d", &n);
+        printf("\nEnter the following process details: ");
+        input(n);
+        scanf("%d", &opt);
+        printf("\nEnter 1 for First Cum First Serve\nEnter 2 for SJF\nEnter 3 for Priority\nEnter 4 for Round Robin");
+        printf("\nEnter the option: ");
+        scanf("%d", &opt);
+        switch(opt)
+        {
+                        case 1:{
+                                       	printf("\nFirst Cum First Serve Algorithm");
+                                       	fcfs(n);
+                                       	np(n);
+                                       	disp(n);
+                               }
+                               break;
+                        case 2:{
+                                        	int opt1;
+                                        	printf("\nEnter 1 for Non-preemptive\nEnter 2 for Preemptive");
+                                          printf("\nEnter your option: ");
+                                        	scanf("%d", &opt1);
+                                        	switch(opt1)
+                                        	{
+                                                case 1: {  
+                                                                  printf("\nShortest Job First Non-Preemptive Algorithm");
+                                                                  sjf(n);
+                                                                	np(n);
+                                                                	disp(n);
+                                                        }
+				                                                break;
+			                                          case 2: {
+					                                                        printf("\nShortest Job First Pre-emptive Algorithm");
+                                                                	srtf(n);
+                                                                	disp(n);
+				                                                }
+				                                                break;
+			                                                  default: printf("\nEnter the correct option");
+		        	                           }
+		                           }
+		                           break;   
+	                      case 3:{
+                                        	int opt1;
+                                        	printf("\nEnter 1 for Non-preemptive\nEnter 2 for Preemptive");
+			                                    printf("\nEnter your option: ");
+                                       	  scanf("%d", &opt1);
+                                        	switch(opt1)
+                                        	{
+                                                case 1: {
+                                                                	printf("\nPriority Non-Preemptive Algorithm");
+                                                                	pri(n);
+                                                                	np(n);
+                                                                	disp(n);
+                                                        }
+                                                        break;
+                                                case 2: {
+                                                                	printf("\nPriority Preemptive Algorithm");
+                                                                	pripe(n);
+                                                                	disp(n);
+                                                        }
+                                                        break;
+                                                default: printf("\nEnter the correct option");
+                                        	}
+                               }
+                               break;
+	                      case 4:{
+                                        printf("\nRound Robin Algorithm");
+                                        RR(n);
+                                        disp(n);
+                               }
+                               break;
+                        default: printf("\nEnter the correct option");
+        }
+}
