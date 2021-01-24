@@ -1,0 +1,198 @@
+#include <stdio.h>
+#include <limits.h>
+#define H 0
+
+int n,nf,in[100],f[20];
+int h, hit[100];                                                                                                                                                                                                                                                                                                                                                                                                                                   int resethm()
+{
+        h = 0;
+        for(int i = 0; i < n; ++i)
+                hit[i] = 0;
+        for(int i = 0; i < nf; ++i)
+                f[i] = -1;
+}
+
+int isHit(int data)
+{
+        int flag = 0;
+        for(int i = 0; i < nf; ++i)
+        {
+                if(f[i]==data)
+                {
+                        flag = 1;
+                        h++;
+                        break;
+                }
+        }
+        return(flag);
+}
+
+void Pd()
+{
+        for(int i = 0; i < nf; ++i)
+        {
+                if(f[i] != -1)
+                        printf(" %d", f[i]);
+        }
+}
+
+void hmr()
+{
+        float hr;
+        hr = (float)h/n;
+        printf("\nThe Hit Ratio: %.2f", hr);
+        printf("\nThe Miss Ratio: %.2f", 1-hr);
+}
+
+int FIFO()
+{
+        resethm();
+        for(int i = 0; i < n; ++i)
+        {
+                printf("\n%d: ", in[i]);
+                if(isHit(in[i]) == H)
+                {
+                        int temp = (i-h)%nf;
+                        f[temp] = in[i];
+                        Pd();
+                }
+                else
+                        printf(" Page Hit");
+        }
+        hmr();
+}
+
+int LRU()
+{
+        resethm();
+        int l[20];
+        for(int i = 0; i < n; ++i)
+        {
+                printf("\n%d: ", in[i]);
+                if(isHit(in[i]) == H)
+                {
+                        for(int j = 0; j < nf; ++j)
+                        {
+                                int flag = 0;
+                                for(int k = i-1; k >= 0; k--)
+                                {
+                                        if(f[j] == in[k])
+                                        {
+                                                l[j] = k;
+                                                flag = 1;
+                                                break;
+                                        }
+                                }
+                                if(flag == 0)
+                                        l[j] = -1;
+                        }
+                        int min = INT_MAX;
+                        int repin;
+                        for(int j = 0; j < nf; ++j)
+                        {
+                                if(l[j] < min)
+                                {
+                                        min = l[j];
+                                        repin = j;
+                                }
+
+                        }
+                        f[repin] = in[i];
+                        Pd();
+                }
+                else
+                        printf(" Page Hit");
+        }
+        hmr();
+}
+
+int Optimal()
+{
+        resethm();
+        int nr[20];
+        for(int i = 0; i < n; ++i)
+        {
+                printf("\n%d: ", in[i]);
+                if(isHit(in[i]) == H)
+                {
+                        for(int j = 0; j < nf; ++j)
+                        {
+                                int flag = 0;
+                                for(int k = i; k < n; ++k)
+                                {
+                                        if(f[j] == in[k])
+                                        {
+                                                nr[j] = k;
+                                                flag = 1;
+                                                break;
+                                        }
+                                }
+                                if(flag == 0)
+                                        nr[j] = 9999;
+                        }
+                        int max = INT_MIN;
+                        int repin;
+                        for(int j = 0; j < nf; ++j)
+                        {
+                                if(nr[j] > max)
+                                {
+                                        max = nr[j];
+                                        repin = j;
+                                }
+                        }
+                        f[repin] = in[i];
+                        Pd();
+                }
+                else
+                        printf(" Page Hit");
+        }
+        hmr();
+}
+
+int main()
+{
+        printf("\nEnter the length of page reference string(max 100): ");
+        scanf("%d", &n);
+        printf("\nEnter the number of frames(max 20): ");
+        scanf("%d", &nf);
+        printf("\nEnter the reference string one by one: ");
+        for(int i = 0; i < n; ++i)
+        {
+                printf("%d: ", i+1);
+                scanf("%d", &in[i]);
+        }
+        int opt;
+        do
+        {
+                int ch;
+                printf("\nPage Replacement Algorithms\n1.FIFO\n2.LRU\n3.Optimal\nEnter your 
+
+option: ");
+                scanf("%d", &ch);
+                switch(ch)
+                {
+                        case 1:
+                                {
+                                        printf("\nFirst In First Out Algorithm");
+                                        FIFO();
+                                }
+                                break;
+                        case 2:
+                                {
+                                        printf("\nLeast Recently Used Algorithm");
+                                        LRU();
+                                }
+                                break;
+                        case 3:
+                                {
+                                        printf("\nOptimal Algorithm");
+                                        Optimal();
+                                }
+		   break;
+                        default: printf("\nEnter the correct option");
+                }
+                printf("\nDo you want to continue(0 for No/ 1 for Yes): ");
+                scanf("%d", &opt);
+        }while(opt == 1);
+        return(0);
+}
