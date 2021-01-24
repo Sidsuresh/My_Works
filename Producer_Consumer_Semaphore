@@ -1,0 +1,51 @@
+#include <pthread.h>
+#include <unistd.h>
+#include <semaphore.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+int buffer[10];
+int ind = 0;
+sem_t full,emp;
+pthread_mutex_t mu;
+
+void *pro(void *r)
+{
+        while(1)
+        {
+                sleep(1);
+                sem_wait(&emp);
+                pthread_mutex_lock(&mu);
+                int i = rand()%10;
+                buffer[ind++] = i;
+                printf("\nProduced: %d", i);
+                pthread_mutex_unlock(&mu);
+                sem_post(&full);
+        }
+}
+
+void *con(void *w)
+{
+        while(1)
+        {
+                sleep(1);
+                sem_wait(&full);
+                pthread_mutex_lock(&mu);
+                int j = buffer[--ind];
+                printf("\nConsumed: %d", j);
+                pthread_mutex_unlock(&mu);
+                sem_post(&emp);
+        }
+}
+
+int main()
+{
+        pthread_t prod, cons;
+        sem_init(&emp,0,10);
+        sem_init(&full,0,0);
+        pthread_mutex_init(&mu,NULL);
+        pthread_create(&prod,NULL,pro,NULL);
+        pthread_create(&cons,NULL,con,NULL);
+        pthread_exit(NULL);
+        return(0);
+}
