@@ -1,0 +1,99 @@
+#include <iostream>
+#include <stdio.h>
+#include <string>
+#include <ctype.h>
+#include <string.h>
+using namespace std;
+
+string str1, str2;
+int Matrix[50][50];
+
+void init(int m, int n)
+{
+	for (int i = 0; i < n + 1; ++i)
+		Matrix[i][0] = 0;
+
+	for (int i = 0; i < m + 1; ++i)
+		Matrix[0][i] = 0;
+}
+
+int max(int i, int j)
+{
+	int m;
+	if (Matrix[i][j + 1] >= Matrix[i + 1][j])
+		m = Matrix[i][j + 1];
+	else
+		m = Matrix[i + 1][j];
+	return(m);
+}
+
+void prntstr(int m, int n)
+{
+	string str;
+	int k = m;
+	for (int i = n; i > 0; --i)
+	{
+		int chk = 0;
+		for (int j = k; j > 0; --j)
+		{
+			if (Matrix[i][j] == 0)
+			{
+				chk = 1;
+				break;
+			}
+			if ((Matrix[i][j] == Matrix[i - 1][j]) || (Matrix[i][j] == Matrix[i][j - 1]))
+				continue;
+			if ((Matrix[i - 1][j] == Matrix[i][j - 1]) && (Matrix[i][j] = Matrix[i - 1][j - 1] + 1))
+			{
+				str += str1[j - 1];
+				k = j - 1;
+				break;
+			}
+		}
+		if (chk == 1)
+			break;
+	}
+	std::reverse(str.begin(), str.end());
+	cout << "\nLongest Common Subsequence: " << str;
+}
+
+void LCS(int m, int n)
+{
+	init(m, n);
+	for (int i = 0; i < n; ++i)
+	{
+		for (int j = 0; j < m; ++j)
+		{
+			if (str2[i] == str1[j])
+				Matrix[i + 1][j + 1] = 1 + Matrix[i][j];
+			else
+				Matrix[i + 1][j + 1] = max(i, j);
+		}
+	}
+	
+	cout << "\nFinal Matrix: " << endl;
+
+	for (int i = 0; i < n + 1; ++i)
+	{
+		for (int j = 0; j < m + 1; ++j)
+		{
+			cout << Matrix[i][j] << " ";
+		}
+		cout << endl;
+	}
+
+	prntstr(m, n);
+}
+
+int main()
+{
+	int len1, len2;
+	cout << "\nEnter the first string: ";
+	getline(cin, str1);
+	cout << "\nEnter the second string: ";
+	getline(cin, str2);
+	len1 = str1.length();
+	len2 = str2.length();
+	LCS(len1, len2);
+	return(0);
+}
