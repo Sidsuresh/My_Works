@@ -1,0 +1,255 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
+
+void input(int n, int m, int Alloc[n][m], int Avail[m], int Max[n][m], int Ins[m], int Need[n][m])
+{
+        printf("\nAllocation Matrix: \n");
+        for(int i = 0; i < n; ++i)
+        {
+                for(int j = 0; j < m; ++j)
+                {
+                        printf("%d ", Alloc[i][j]);
+                }
+                printf("\n");
+        }
+        printf("\nMax Matrix: \n");
+        for(int i = 0; i < n; ++i)
+        {
+                for(int j = 0; j < m; ++j)
+                {
+                        printf("%d ", Max[i][j]);
+                }
+                printf("\n");
+        }
+        for(int i = 0; i < m; ++i)
+        {
+                int sum = 0;
+                for(int j = 0; j < n; ++j)
+                        sum+=Alloc[j][i];
+                Avail[i] = Ins[i] - sum;
+        }
+
+        printf("\nAvailable: ");
+        for(int i = 0; i < m; ++i)
+        {
+                printf("%d ", Avail[i]);
+        }
+        for(int i = 0; i < n; ++i)
+        {
+                for(int j = 0; j < m; ++j)
+                        Need[i][j] = Max[i][j] - Alloc[i][j];
+        }
+        printf("\nNeed Matrix: \n");
+        for(int i = 0; i < n; ++i)
+        {
+                for(int j = 0; j < m; ++j)
+                        printf("%d ", Need[i][j]);
+                printf("\n");
+        }
+}
+
+int chk(int n, int m, int Alloc[n][m], int Avail[m], int Need[n][m], int SS[n])
+{
+        int Work[m];
+        for(int i = 0; i < m; ++i)
+        {
+                Work[i] = Avail[i];
+        }
+
+        char Fin[n];
+        for(int i = 0; i < n; ++i)
+        {
+                Fin[i] = 'F';
+        }
+        int complete = 0;
+        while(complete < n)
+        {
+                int flag = 0;
+                for(int i = 0; i < n; ++i)
+                {
+                        int chk = 0;
+                        for(int j = 0; j < m; ++j)
+                        {
+                                if(Need[i][j] > Work[j])
+                                {
+                                        chk = 1;
+                                        break;
+                                }
+                        }
+                        if((chk == 0) && (Fin[i] == 'F'))
+                        {
+                                Fin[i] = 'T';
+                                flag = 1;
+                                for(int j = 0; j < m; ++j)
+                                {
+                                        Work[j]+=Alloc[i][j];
+                                }
+                                printf("\nWork: ");
+                                for(int j = 0; j < m; ++j)
+                                {
+                                        printf("%d ", Work[j]);
+                                }
+                                SS[complete++] = i;
+                        }
+                }
+                if(flag == 0)
+                        break;
+        }
+        if(complete<n)
+                return(0);
+        else
+                return(1);
+}
+
+void request(int n, int m, int All[n][m], int N[n][m], int Av[m])
+{
+        int pn, R[m];
+        printf("\nEnter process number(1 to n): ");
+        scanf("%d", &pn);
+        pn--;
+        for(int i = 0; i < m; ++i)
+        {
+                printf("\nEnter Resource%d: ", i+1);
+                scanf("%d",&R[i]);
+        }
+        for(int i = 0; i < n; ++i)
+        {
+                if(i != pn)
+                        continue;
+                else
+                {
+                        for(int j = 0; j < m; ++j)
+                        {
+                                if(R[j] > N[i][j])
+                                {
+                                        printf("\nError (Request > Need)");
+                                        exit(0);
+                                }
+                        }
+                }
+        }
+        for(int i = 0; i < m; ++i)
+        {
+                if(R[i] > Av[m])
+                {
+                        printf("\nError (Request > Available) ");
+                        exit(0);
+                }
+        }
+        for(int i = 0; i < n; ++i)
+        {
+                if(i != pn)
+                        continue;
+                else
+                {
+                        for(int j = 0; j < m; ++j)
+                        {
+                                N[i][j]-= R[j];
+                                All[i][j]+= R[j];
+                                Av[j]-=R[j];
+                        }
+                }
+        }
+        printf("\nAllocation: \n");
+        for(int i = 0; i < n; ++i)
+        {
+                for(int j = 0; j < m; ++j)
+                {
+                        printf("%d ",All[i][j]);
+                }
+                printf("\n");
+        }
+        printf("\nNeed: \n");
+        for(int i = 0; i < n; ++i)
+        {
+                for(int j = 0; j < m; ++j)
+                {
+                        printf("%d ",N[i][j]);
+                }
+                printf("\n");
+        }
+        printf("\nAvailable: \n");
+        for(int i = 0; i < m; ++i)
+        {
+                printf("%d ", Av[i]);
+        }
+}
+
+int main()
+{
+        int n,m;
+        printf("\nEnter the number of processes: ");
+        scanf("%d", &n);
+        printf("\n Enter the number of resources: ");
+        scanf("%d", &m);
+        char P[n][10];
+        for(int i = 0; i< n; ++i)
+        {
+                printf("\nEnter the name of process: ");
+                scanf("%s", P[i]);
+        }
+        int Ins[m];
+        for(int i = 0; i < m; ++i)
+        {
+                printf("\nEnter the number of instances for Resource %d:", i+1);
+                scanf("%d",&Ins[i]);
+        }
+        int Alloc[n][m], Max[n][m], Need[n][m], Avail[m], SS[n];
+        for(int i = 0; i < n; ++i)
+        {
+                for(int j = 0; j < m; ++j)
+                {
+                        printf("\nEnter the Allocation for Process %s Resource %d: ", P[i], j+1);
+                        scanf("%d", &Alloc[i][j]);
+                }
+        }
+        for(int i = 0; i < n; ++i)
+        {
+                for(int j = 0; j < m; ++j)
+                {
+                        printf("\nEnter the Max for Process %s Resource %d: ", P[i], j+1);
+                        scanf("%d", &Max[i][j]);
+                }
+        }
+        input(n,m,Alloc,Avail,Max,Ins,Need);
+        int ret = chk(n,m,Alloc,Avail,Need,SS);
+        if(ret == 1)
+        {
+                printf("\nDeadlock is avoided");
+                printf("\nSafe Sequence: ");
+                for(int i = 0; i < n; ++i)
+                {
+                        printf("%s ", P[SS[i]] );
+                }
+                printf("\n");
+        }
+        else
+        {
+                printf("\nDeadlock will take place");
+        }
+
+        char ch;
+        printf("\nDo you have a request(Y/N): \n");
+        scanf(" %c", &ch);
+        if(toupper(ch) == 'Y')
+        {
+                int SSR[n];
+                request(n,m,Alloc,Need,Avail);
+                int ret = chk(n,m,Alloc,Avail,Need,SSR);
+                if(ret == 1)
+                {
+                        printf("\n Deadlock is avoided");
+                        printf("\n Safe Sequence: ");
+                        for(int i = 0; i < n; i++)
+                        {
+                                printf("%s ", P[SSR[i]]);
+                        }
+                        printf("\n");
+                }
+                else
+                        printf("\nDeadlock will take place");
+        }
+        return(0);
+}
