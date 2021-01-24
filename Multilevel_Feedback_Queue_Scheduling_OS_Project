@@ -1,0 +1,501 @@
+#include <iostream>
+#include <stdio.h>
+#include <queue>
+#include <string.h>
+using namespace std;
+
+int n, y;
+int time = 0;
+int ST = 0, SW = 0;
+
+struct Pro 
+{
+    char Pname[30];
+    int AT, BT, CT, BTR, TAT, WT, Pri;
+}P[50], S[50];
+
+void input()
+{
+    for (int i = 0; i < n; ++i)
+    {
+        cout << "\nProcess " << i + 1;
+        cout << "\nProcess Name: ";
+        cin >> P[i].Pname;
+        cout << "\n Arrival Time: ";
+        cin >> P[i].AT;
+        cout << "\n Burst Time: ";
+        cin >> P[i].BT;
+        cout << "\nPriority(Between 1 and 3): ";
+        cin >> P[i].Pri;
+        P[i].BTR = P[i].BT;
+    }
+}
+
+void prnt()
+{
+    for (int i = 0; i < n; ++i)
+    {
+        cout << "\nProcess " << i + 1;
+        cout << "\nProcess Name: ";
+        cout << P[i].Pname;
+        cout << "\n Arrival Time: ";
+        cout << P[i].AT;
+        cout << "\n Burst Time: ";
+        cout << P[i].BT;
+        cout << "\nPriority(Between 1 and 3): ";
+        cout << P[i].Pri;
+    }
+}
+
+int n1 = 0, n2 = 0, n3 = 0;
+int c1, c2, c3;
+struct Pro Q1[50], Q2[50], Q3[50];
+queue <Pro> q1, q2, q3;
+
+void app(int i, int m)
+{
+    switch (i)
+    {
+    case 1: {
+        Q1[n1] = P[m];
+        n1++;
+    }
+          break;
+    case 2: {
+        Q2[n2] = P[m];
+        n2++;
+    }
+          break;
+    case 3: {
+        Q3[n3] = P[m];
+        n3++;
+    }
+          break;
+    }
+}
+
+void sort(int chk)
+{
+    struct Pro temp, temp1, temp2;
+    if (chk == 1)
+    {
+        for (int i = 0; i < n1; ++i)
+        {
+            for (int j = i+1; j < n1; ++j)
+            {
+                if (Q1[j].BT < Q1[i].BT)
+                {
+                    
+                    temp = Q1[i];
+                    Q1[i] = Q1[j];
+                    Q1[j] = temp;
+                }
+            }
+        }
+    }
+    else if (chk == 2)
+    {
+        struct Pro temp;
+        int min = 0;
+        for (int i = 0; i < n2; ++i)
+        {
+            if (Q2[i].Pri == 1)
+            {
+                temp = Q2[i];
+                Q2[i] = Q2[min];
+                Q2[min] = Q2[i];
+                min++;
+            }
+        }
+
+        for (int i = min; i < n2; ++i)
+        {
+            for (int j = i+1; j < n2; ++j)
+            {
+                if (Q2[j].BT < Q2[i].BT)
+                {
+                    temp1 = Q2[i];
+                    Q2[i] = Q2[j];
+                    Q2[j] = temp1;
+                    
+                }
+            }
+        }
+    }
+    else
+    {
+        struct Pro temp;
+        int min1 = 0, min2 = 0;
+        for (int i = 0; i < n3; ++i)
+        {
+            if (Q3[i].Pri == 1)
+            {
+                temp = Q3[i];
+                Q3[i] = Q3[min1];
+                Q3[min1] = Q3[i];
+                min1++;
+            }
+        }
+        for (int i = min1; i < n3; ++i)
+        {
+            if (Q3[i].Pri == 2)
+            {
+                temp = Q3[i];
+                Q3[i] = Q3[min2];
+                Q3[min2] = Q3[2];
+                min2++;
+            }
+        }
+        for (int i = (min1+min2); i < n3; ++i)
+        {
+            for (int j = i+1; j < n3; ++j)
+            {
+                if (Q3[j].BT < Q3[i].BT)
+                {
+                    temp2 = Q3[i];
+                    Q3[i] = Q3[j];
+                    Q3[j] = temp2;    
+                }
+            }
+        }
+    }
+}
+
+int r[50], cnt=0;
+
+void remP()
+{
+    for (int k = 0; k < cnt; ++k)
+    {
+        for (int i = r[k]; i < (n - 1); ++i)
+        {
+            P[i] = P[i + 1];
+        }
+        for (int i = k+1; i < cnt; ++i)
+        {
+            r[i]--;
+        }
+        n--;
+    }
+    cnt = 0;
+}
+
+void arrange()
+{
+    for (int i = 1; i <= 3; ++i)
+    {
+        if ((i == 2 || i == 3) && n1 != 0)
+            break;
+        if (i == 3 && n2 != 0)
+            break;
+        for (int j = 0; j < n; ++j)
+        {
+            int wt;
+            
+            if (n1 != 0 || i == 1)
+            {
+                if ((P[j].AT <= time) && (P[j].Pri == i))
+                {
+                    app(i, j);
+                    r[cnt++] = j;                  
+                }
+                
+            }
+            else
+            {
+                wt = time - P[j].AT;
+                if ((i < 3) && (wt / P[j].BT >= 1) && (P[j].Pri == i + 1) && (P[j].AT <= time))
+                {
+                    app(i, j);
+                    r[cnt++] = j;
+                    continue;
+                }
+                if ((P[j].AT <= time) && (P[j].Pri == i))
+                {
+                    app(i, j);
+                    r[cnt++] = j;
+                }
+            }
+        }
+        remP();
+        sort(i);      
+    }
+}
+
+int med1()
+{
+    int tq;
+    if (n1 % 2 != 0)
+        tq = Q1[n1 / 2].BTR;
+    else
+        tq = (Q1[(n1 - 1) / 2].BTR + Q1[n1 / 2].BTR)/2;
+    return(tq);
+}
+
+int med2()
+{
+    int tq;
+    if (n2 % 2 != 0)
+        tq = Q2[n2 / 2].BTR;
+    else
+        tq = (Q2[(n2 - 1) / 2].BTR + Q2[n2 / 2].BTR) / 2;
+    return(tq*2);
+}
+
+int med3()
+{
+    int tq;
+    if (n3 % 2 != 0)
+        tq = Q3[n3 / 2].BTR;
+    else
+        tq = (Q3[(n3 - 1) / 2].BTR + Q3[n3 / 2].BTR) / 2;
+    return(tq*3);
+
+}
+
+int RR1(int tq)
+{
+    struct Pro data;
+    int chk;
+    int complete = 0;
+    int com = 0;
+    int num = q1.size(); 
+    while (complete != num)
+    {
+        cout << "\nTime: " << time;
+        data = q1.front();  
+        q1.pop();
+        if (data.BTR == 0) 
+            continue;
+        else
+        {
+            int chk3 = 0; 
+            if (data.BTR < tq)
+                chk = data.BTR;
+            else
+                chk = tq;
+            data.CT = time + chk;
+            data.BTR -= chk;
+            time += chk;
+            for (int l = 0; l < n; ++l) 
+            {
+                if (P[l].Pri == 1 && time >= P[l].AT)
+                {
+                    q1.push(P[l]);
+                    r[cnt++] = l;
+                    num++;
+                }
+                remP();
+                cnt = 0;
+            }
+            if (data.BTR > 0)
+            {
+                Q2[n2++] = data;
+                complete++;
+            }
+            else 
+            {
+                cout << "\nSystem Process: " << data.Pname;
+                cout << "\tArrival Time: " << data.AT;
+                cout << "\tCompletion Time: " << data.CT;
+                data.TAT = data.CT - data.AT;
+                data.WT = data.TAT - data.BT;
+                ST += data.TAT;
+                SW += data.WT;
+                cout << "\nTAT: " << data.TAT;
+                cout << "\tWT: " << data.WT << endl;
+                complete++;
+                com++;
+            }
+        }
+    }
+    return(com);
+}
+
+int RR2(int tq)
+{
+    struct Pro data;
+    int chk;
+    int complete = 0;
+    int com = 0;
+    int num = q2.size(); 
+    while (complete != num)
+    {
+        data = q2.front(); 
+        q2.pop();
+        if (data.BTR == 0) 
+            continue;
+        else
+        {
+            cout << "\nTime: " << time;
+            int chk3 = 0;  
+            if (data.BTR < tq)
+                chk = data.BTR;
+            else
+                chk = tq;
+            data.CT = time + chk;
+            data.BTR -= chk;
+            time += chk;
+            for (int l = 0; l < n; ++l) 
+            {
+                if (P[l].Pri == 2 && time >= P[l].AT)
+                {
+                    q2.push(P[l]);
+                    r[cnt++] = l;
+                    num++;
+                }
+                remP();
+                cnt = 0;
+            }
+            if (data.BTR > 0)
+            {
+                Q3[n3++] = data;
+                complete++;
+            }
+            else 
+            {
+                cout << "\nSystem Process: " << data.Pname;
+                cout << "\tArrival Time: " << data.AT;
+                cout << "\tCompletion Time: " << data.CT;
+                data.TAT = data.CT - data.AT;
+                data.WT = data.TAT - data.BT;
+                ST += data.TAT;
+                SW += data.WT;
+                cout << "\nTAT: " << data.TAT;
+                cout << "\tWT: " << data.WT << endl;
+                complete++;
+                com++;
+            }
+        }
+    }
+    return(com);
+}
+
+int RR3(int tq)
+{
+    struct Pro data;
+    int chk;
+    int complete = 0; 
+    int num = q3.size(); 
+    while (complete != num)
+    {
+        cout << "\nTime: " << time;
+        data = q3.front();
+        q3.pop();
+        if (data.BTR == 0)
+            continue;
+        else
+        {
+            int chk3 = 0; 
+            if (data.BTR < tq)
+                chk = data.BTR;
+            else
+                chk = tq;
+            data.CT = time + chk;
+            data.BTR -= chk;
+            time += chk;
+            for (int l = 0; l < n; ++l)
+            {
+                if (P[l].Pri == 3 && time >= P[l].AT)
+                {
+                    q3.push(P[l]);
+                    r[cnt++] = l;
+                    num++;
+                }
+                remP();
+                cnt = 0;
+            }
+            if (data.BTR > 0)
+            {
+                q3.push(data);
+                num++;
+            }
+            else 
+            {
+                cout << "\nSystem Process: " << data.Pname;
+                cout << "\tArrival Time: " << data.AT;
+                cout << "\tCompletion Time: " << data.CT;
+                data.TAT = data.CT - data.AT;
+                data.WT = data.TAT - data.BT;
+                ST += data.TAT;
+                SW += data.WT;
+                cout << "\nTAT: " << data.TAT;
+                cout << "\tWT: " << data.WT << endl;
+                complete++;
+            }
+        }
+    }
+    return(complete);
+}
+
+int schedule()
+{
+    c1 = n1;
+    c2 = n2;
+    c3 = n3;
+    int tq1 = med1();
+    int tq2 = med2();
+    int tq3 = med3();
+
+    for (int i = 0; i < c1; ++i)
+    {
+        q1.push(Q1[i]);
+        n1--;
+    }
+    
+    for (int i = 0; i < c2; ++i)
+    {
+        q2.push(Q2[i]);
+        n2--;
+    }
+    for (int i = 0; i < c3; ++i)
+    {
+        q3.push(Q3[i]);
+        n3--;
+    }
+
+    int comp;
+    if (!q1.empty())
+    {
+        comp = RR1(tq1);
+        n1 = 0;
+    }
+    else if (q1.empty() && !q2.empty())
+    {
+        comp = RR2(tq2);
+        n2 = 0;
+    }
+    else if (q1.empty() && q2.empty() && !q3.empty())
+    {
+        comp = RR3(tq3);
+        n3 = 0;
+    }
+    else
+    {
+        comp = 0;
+        cout << "\nNo Processes Available";
+        time++;
+    }
+    return(comp);
+}
+
+int main()
+{
+    cout << "\nEnter the number of processes: ";
+    cin >> n;
+    y = n;
+    input();
+    int com = 0;
+    while (com != y)
+    {
+        arrange();
+        com += schedule();
+    }
+    float AT = (float)ST / y;
+    float AW = (float)SW / y;
+    float TP = (float)y / time;
+    cout << "\nAverage TurnAround Time: " << AT << endl;
+    cout << "\nAverage Waiting Time: " << AW << endl;
+    cout << "\nThroughput: " << TP << endl;
+    return(0);
+}
